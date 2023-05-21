@@ -4,6 +4,7 @@ import(
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"io/ioutil"
 )
 
 // Creación del indice base en ZincSearch
@@ -144,13 +145,13 @@ func UpZinc(){
 		return
 	}
 	defer resp.Body.Close()
-	// // Leer la respuesta
-	// respData, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	fmt.Println("Error al leer la respuesta:", err)
-	// 	return
-	// }
+	// Leer la respuesta
+	respData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error al leer la respuesta:", err)
+		return
+	}
 
-	// // Mostrar la respuesta
-	// fmt.Println("Respuesta:", string(respData))
+	// Mostrar la respuesta
+	fmt.Println("Respuesta:", string(respData))
 }
