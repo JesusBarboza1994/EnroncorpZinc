@@ -9,5 +9,5 @@ import (
 
 func main() {
 	config.UpZinc()
-	config.SendItem(config.ExtractInfoItem())
+	config.LoopFoldersOfAUser()
 }

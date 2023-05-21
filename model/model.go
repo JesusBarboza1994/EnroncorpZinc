@@ -1,6 +1,7 @@
 package model
 
 type Email struct {
+	File                   string `json:"File"`
 	MessageID              string `json:"Message-ID"`
 	Date                   string `json:"Date"`
 	From                   string `json:"From"`

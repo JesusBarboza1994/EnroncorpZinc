@@ -12,11 +12,17 @@ func UpZinc(){
 	url := "http://localhost:4080/api/index"
 
 	data := map[string]interface{}{
-		"name":         "enron_zinc_v01",
+		"name":         "enron_zinc_v02",
 		"storage_type": "disk",
 		"shard_num":    1,
 		"mappings": map[string]interface{}{
 			"properties": map[string]interface{}{
+				"File": map[string]interface{}{
+					"type":          "text",
+					"index":         true,
+					"store":         true,
+					"highlightable": true,
+				},
 				"Message-ID": map[string]interface{}{
 					"type":          "text",
 					"index":         true,

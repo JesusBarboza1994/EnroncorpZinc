@@ -10,15 +10,13 @@ import (
 	"strings"
 	"github.com/JesusBarboza1994/EnroncorpZinc/model"
 )
-func ExtractInfoItem() model.Email{
-	 //Se registra la ruta del archivo
-	filePath := "./enron_mail_20110402/maildir/allen-p/sent_items/4" 
+func ExtractInfoItem(filePath, folderName string){
 
 	// Lee el archivo
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		fmt.Println("Error al leer el archivo:", err)
-		return model.Email{}
+		return 
 	}
 
 	// Convierte el contenido del archivo a una cadena
@@ -75,27 +73,39 @@ func ExtractInfoItem() model.Email{
 
 	// Convierte el mapa a un objeto Email
 	email := model.Email{
-		MessageID:              emailMap["Message-ID"].(string),
-		Date:                   emailMap["Date"].(string),
-		From:                   emailMap["From"].(string),
-		To:                     emailMap["To"].(string),
-		Subject:                emailMap["Subject"].(string),
-		MimeVersion:            emailMap["Mime-Version"].(string),
-		ContentType:            emailMap["Content-Type"].(string),
-		ContentTransferEncoding: emailMap["Content-Transfer-Encoding"].(string),
-		XFrom:                  emailMap["X-From"].(string),
-		XTo:                    emailMap["X-To"].(string),
-		Xcc:                    emailMap["X-cc"].(string),
-		Xbcc:                   emailMap["X-bcc"].(string),
-		XFolder:                emailMap["X-Folder"].(string),
-		XOrigin:                emailMap["X-Origin"].(string),
-		XFileName:              emailMap["X-FileName"].(string),
-		Message:                emailMap["Message"].(string),
+		File:              folderName,
+		MessageID:              getStringValue(emailMap["Message-ID"]),
+		Date:                   getStringValue(emailMap["Date"]),
+		From:                   getStringValue(emailMap["From"]),
+		To:                     getStringValue(emailMap["To"]),
+		Subject:                getStringValue(emailMap["Subject"]),
+		MimeVersion:            getStringValue(emailMap["Mime-Version"]),
+		ContentType:            getStringValue(emailMap["Content-Type"]),
+		ContentTransferEncoding: getStringValue(emailMap["Content-Transfer-Encoding"]),
+		XFrom:                  getStringValue(emailMap["X-From"]),
+		XTo:                    getStringValue(emailMap["X-To"]),
+		Xcc:                    getStringValue(emailMap["X-cc"]),
+		Xbcc:                   getStringValue(emailMap["X-bcc"]),
+		XFolder:                getStringValue(emailMap["X-Folder"]),
+		XOrigin:                getStringValue(emailMap["X-Origin"]),
+		XFileName:              getStringValue(emailMap["X-FileName"]),
+		Message:                getStringValue(emailMap["Message"]),
 	}
 
-	return email
+	SendItem(email)
 }
 
+func getStringValue(value interface{}) string {
+	if value == nil {
+		return "-"
+	}
+
+	if str, ok := value.(string); ok {
+		return str
+	}
+
+	return ""
+}
 func SendItem(email model.Email){
 		// Convierte el objeto Email a JSON
 		jsonData, err := json.MarshalIndent(email, "", "  ")
@@ -104,10 +114,10 @@ func SendItem(email model.Email){
 			return
 		}
 	
-		fmt.Printf("%s\n", jsonData)
+		// fmt.Printf("%s\n", jsonData)
 		
 	
-		req, err := http.NewRequest("POST", "http://localhost:4080/api/enron_zinc_v01/_doc", bytes.NewBuffer(jsonData))
+		req, err := http.NewRequest("POST", "http://localhost:4080/api/enron_zinc_v02/_doc", bytes.NewBuffer(jsonData))
 			if err != nil {
 					log.Fatal(err)
 			}
