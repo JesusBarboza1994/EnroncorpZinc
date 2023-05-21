@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"log"
+	"bytes"
+	"net/http"
 	"github.com/JesusBarboza1994/EnroncorpZinc/model"
 	"github.com/JesusBarboza1994/EnroncorpZinc/config"
 )
@@ -103,4 +106,16 @@ func main() {
 
 	fmt.Printf("%s\n", jsonData)
 	config.UpZinc()
+
+	req, err := http.NewRequest("POST", "http://localhost:4080/api/enron_zinc_v01/_doc", bytes.NewBuffer(jsonData))
+    if err != nil {
+        log.Fatal(err)
+    }
+	req.SetBasicAuth("admin", "Complexpass#123")
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        log.Fatal(err)
+    }
+	defer resp.Body.Close()
 }

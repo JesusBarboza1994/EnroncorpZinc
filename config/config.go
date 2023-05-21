@@ -132,7 +132,7 @@ func UpZinc(){
 
 	// Establecer las cabeceras de la solicitud
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	// Agregar las credenciales de autenticación Basic
 	req.SetBasicAuth("admin", "Complexpass#123")
 
@@ -144,7 +144,6 @@ func UpZinc(){
 		return
 	}
 	defer resp.Body.Close()
-	fmt.Println("hey")
 	// // Leer la respuesta
 	// respData, err := ioutil.ReadAll(resp.Body)
 	// if err != nil {
