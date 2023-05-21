@@ -5,26 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"github.com/JesusBarboza1994/EnroncorpZinc/model"
+	"github.com/JesusBarboza1994/EnroncorpZinc/config"
 )
 
-type Email struct {
-	MessageID              string `json:"Message-ID"`
-	Date                   string `json:"Date"`
-	From                   string `json:"From"`
-	To                     string `json:"To"`
-	Subject                string `json:"Subject"`
-	MimeVersion            string `json:"Mime-Version"`
-	ContentType            string `json:"Content-Type"`
-	ContentTransferEncoding string `json:"Content-Transfer-Encoding"`
-	XFrom                  string `json:"X-From"`
-	XTo                    string `json:"X-To"`
-	Xcc                    string `json:"X-cc"`
-	Xbcc                   string `json:"X-bcc"`
-	XFolder                string `json:"X-Folder"`
-	XOrigin                string `json:"X-Origin"`
-	XFileName              string `json:"X-FileName"`
-	Message                string `json:"Message"`
-}
+
 
 func main() {
 	//Se registra la ruta del archivo
@@ -90,7 +75,7 @@ func main() {
 	}
 
 	// Convierte el mapa a un objeto Email
-	email := Email{
+	email := model.Email{
 		MessageID:              emailMap["Message-ID"].(string),
 		Date:                   emailMap["Date"].(string),
 		From:                   emailMap["From"].(string),
@@ -116,5 +101,6 @@ func main() {
 		return
 	}
 
-	fmt.Printf(jsonData["Message-ID"])
+	fmt.Printf("%s\n", jsonData)
+	config.UpZinc()
 }
