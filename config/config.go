@@ -12,7 +12,7 @@ func UpZinc(){
 	url := "http://localhost:4080/api/index"
 
 	data := map[string]interface{}{
-		"name":         "enron_zinc_v02",
+		"name":         "enron_zinc_v03",
 		"storage_type": "disk",
 		"shard_num":    1,
 		"mappings": map[string]interface{}{
@@ -160,4 +160,33 @@ func UpZinc(){
 
 	// Mostrar la respuesta
 	fmt.Println("Respuesta:", string(respData))
+}
+
+func IndexExist() bool {
+	url := "http://localhost:4080/api/index/enron_zinc_v03"
+
+	// Crear solicitud HEAD
+	req, err := http.NewRequest("HEAD", url, nil)
+	if err != nil {
+		fmt.Println("Error al crear la solicitud:", err)
+		return false
+	}
+
+	// Establecer las cabeceras de la solicitud
+	req.Header.Set("Content-Type", "application/json")
+
+	// Agregar las credenciales de autenticación Basic
+	req.SetBasicAuth("admin", "Complexpass#123")
+
+	// Realizar la solicitud HTTP
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error al enviar la solicitud:", err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	// Retornar el estado de la respuesta de la API
+	return resp.StatusCode == http.StatusOK
 }
