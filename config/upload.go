@@ -118,7 +118,7 @@ func SendItem(email model.Email){
 		// fmt.Printf("%s\n", jsonData)
 		
 	
-		req, err := http.NewRequest("POST", "http://localhost:4080/api/enron_zinc_v03/_doc", bytes.NewBuffer(jsonData))
+		req, err := http.NewRequest("POST","http://localhost:4080/api/enron_zinc_v03/_doc", bytes.NewBuffer(jsonData))
 			if err != nil {
 					log.Fatal(err)
 			}

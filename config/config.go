@@ -5,12 +5,13 @@ import(
 	"fmt"
 	"net/http"
 	"io/ioutil"
+	"github.com/JesusBarboza1994/EnroncorpZinc/model"
+
 )
 
 // Creación del indice base en ZincSearch
 func UpZinc(){
-	url := "http://localhost:4080/api/index"
-
+	// Creación del indice
 	data := map[string]interface{}{
 		"name":         "enron_zinc_v03",
 		"storage_type": "disk",
@@ -131,7 +132,7 @@ func UpZinc(){
 	}
 
 	// Crear de solicitud POST
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", model.MainUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Error al crear la solicitud:", err)
 		return
@@ -163,10 +164,9 @@ func UpZinc(){
 }
 
 func IndexExist() bool {
-	url := "http://localhost:4080/api/index/enron_zinc_v03"
 
 	// Crear solicitud HEAD
-	req, err := http.NewRequest("HEAD", url, nil)
+	req, err := http.NewRequest("HEAD", model.IndexUrl, nil)
 	if err != nil {
 		fmt.Println("Error al crear la solicitud:", err)
 		return false

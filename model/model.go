@@ -1,5 +1,11 @@
 package model
 
+const(
+	MainUrl = "http://localhost:4080/api/index"
+	IndexUrl = "http://localhost:4080/api/index/enron_zinc_v03"
+	SearchUrl = "http://localhost:4080/api/enron_zinc_v03"
+)
+
 type Email struct {
 	File                    string `json:"File"`
 	User                    string `json:"User"`
