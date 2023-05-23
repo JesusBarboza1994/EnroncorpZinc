@@ -11,7 +11,7 @@ func LoopUsers(){
 
 	wg := &sync.WaitGroup{}
 	// Declara la ruta base principal
-	folderPath := "./enron_mail_20110402/maildir"
+	folderPath := "../enron_mail_20110402/maildir"
 
 	// Obtiene la lista de carpetas de usuarios
 	usersFolders, err := os.ReadDir(folderPath)
