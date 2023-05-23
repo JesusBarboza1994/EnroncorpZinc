@@ -14,11 +14,23 @@ func Search(w http.ResponseWriter, r *http.Request){
 	
 	filepath.Join(model.SearchUrl, "_search")
 
+	// Se crea la variable input para recibir la información enviada por POST
+	var input model.SearchInput
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	fmt.Println(input)
+	fmt.Println(input.Query	)
+	fmt.Println(input.Query.Term)
+	fmt.Println(input.Query.Field)
+	// Se construye el json a enviar a zincsearch
 	data := map[string]interface{}{
-		"search-type": "text",
+		"search_type": "match",
 		"query": map[string]interface{}{
-			"term":  "sent_items",
-			"field": "_all",
+			"term":  input.Query.Term,
+			"field": input.Query.Field,
 		},
 		"sort_fields":  []string{"-@timestamp"},
 		"from":         0,
