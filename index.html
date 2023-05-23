@@ -3,38 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Search Interface</title>
+  <title>EnronCorp Search</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.2.0/fonts/remixicon.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </head>
 <body>
-  <div id="app" class="container mx-auto">
-    <h1 class="text-2xl font-bold">API Search Interface</h1>
-
-    <input type="text" v-model="searchTerm" placeholder="Search query" class="border border-gray-300 rounded px-4 py-2 mt-4">
-    <button @click="search" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">Search</button>
-
-    <table class="mt-4">
-      <thead v-if="data.length > 0">
-        <tr >
-          <th v-for="column in columns" :key="column" class="px-4 py-2">{{ column }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="hit in data" :key="hit._id" @click="setSpecificData(hit._source)">
-          <td >{{ formatDate(hit._source.Date) }}</td>
-          <td>{{ hit._source.From }}</td>
-          <td>{{ hit._source.To }}</td>
-          <td>{{ hit._source.Subject }}</td>
-          <td>{{ hit._source.User }}</td>
-          <td>{{ hit._source.File }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <div style="white-space: break-spaces;">{{ specificData}}</div>
-
-    <div v-if="error">{{ error }}</div>
+  <div id="app" class="container mx-32 mt-20">
+    <h1 class="text-3xl font-bold">EnronCorp Search</h1>
+    <div class="mt-8 px-4 rounded-md w-72 border-2 border-color: rgb(248 250 252);">
+      <i v-if="searchTerm===''" class="ri-search-line"></i>
+      <input type="text" @keyup.enter="search" v-model="searchTerm" placeholder="Search query" class="border-0 outline-none rounded px-4 py-2">
+    </div>
+    <div class="flex gap-8 mt-2">
+      <div>
+        <input type="radio" :id=4 name="group" value="_all"  v-model="selectedOption">
+        <label for=4>All</label>
+      </div>
+      <div v-for="(column, index) in columns">
+        <input type="radio" :id=index name="group" :value=column  v-model="selectedOption">
+        <label :for=index>{{column}}</label>
+      </div>
+      <div class="flex items-center">
+        <input type="range" min="0" max="100" v-model="sliderValue" class="w-full h-2 bg-gray-300 rounded-full appearance-none outline-none focus:outline-none" />
+        <div class="w-6 h-6 shadow-md ml-2">{{sliderValue}}</div>
+        <p class="ml-2">results</p>
+      </div>
+    </div>
+    <div v-if="data.length !== 0" class="flex gap-4 justify-center">
+      <div @click="changePage('-')" class="font-semibold" style="cursor:pointer; color:#225dcb;">&#60</div>
+      <div class="font-semibold" v-for="item in totalPages" style="cursor:pointer; color:#225dcb;" @click="currentPage = item">{{item}}</div>
+      <div @click="changePage('+')" class="font-semibold" style="cursor:pointer; color:#225dcb;">&#62</div>
+    </div> 
+    <!-- <button @click="search" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">Search</button> -->
+    <div class="flex gap-4">
+      <table class="border-2 border-gray-300 mt-8 rounded-md mb-10">
+        <thead  class="border border-gray-300" v-if="data.length > 0" style="cursor:pointer">
+          <tr >
+            <th class="px-4 py-2 border border-gray-300" v-for="column in columns" :key="column" @click="sortByColumn(column)">{{ column }}</th>
+          </tr>
+        </thead>
+        <tbody class="text-xs">
+          <tr v-for="(hit, index) in paginatedData" :key="hit._id" class="hover:bg-gray-100" :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-200'" @click="setSpecificData(hit._source)" >
+            <td class="px-4 py-2 border border-gray-300" >{{ formatDate(hit._source.Date) }}</td>
+            <td class="px-4 py-2 border border-gray-300">{{ hit._source.From }}</td>
+            <td class="px-4 py-2 border border-gray-300">{{ hit._source.To }}</td>
+            <td class="px-4 py-2 border border-gray-300">{{ hit._source.Subject }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-if="specificData !== ''" class="max-h-96 overflow-y-auto max-w-lg text-sm mt-8 bg-gray-100 border-2 p-2" style="white-space: break-spaces; ">{{ specificData}}</div>
+    </div>
+    <div v-if="error" class="flex gap-4 flex-col items-center">
+      <i class="ri-stack-fill text-9xl"></i>
+      <p >{{ error }}</p>
+    </div>
+    <div v-if="boolData" class="flex flex-col items-center">
+      <i class="ri-database-2-line text-9xl" ></i>
+      <p>Encuentra información en la base de datos</p>
+    </div>
+    
   </div>
 
   <script src="app.js"></script>

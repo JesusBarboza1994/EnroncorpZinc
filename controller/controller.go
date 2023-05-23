@@ -31,7 +31,7 @@ func Search(w http.ResponseWriter, r *http.Request){
 		},
 		"sort_fields":  []string{"-@timestamp"},
 		"from":         0,
-		"max_results":  20,
+		"max_results":  input.MaxResults,
 		"_source":      []string{},
 	}
 	// Convertir los datos a formato JSON

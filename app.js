@@ -2,43 +2,49 @@ new Vue({
   el: '#app',
   data: {
     searchTerm: '',
-    columns: ["Date", "From", "To", "Subject", "User", "File"], // Reemplaza con los nombres de tus columnas
+    columns: ["Date", "From", "To", "Subject"], // Reemplaza con los nombres de tus columnas
     data: [], // Reemplaza con los datos obtenidos de tu API
     error:'',
-    specificData:''
-    
+    specificData:'',
+    boolData: true,
+    selectedOption: '_all',
+    sliderValue: 50,
+    currentPage: 1,
+    itemsPerPage:20
   },
   computed: {
-    sortedData() {
-      // Aplica el filtro y ordena los datos según la columna seleccionada
-      return this.data.filter(item => {
-        return Object.values(item).some(value =>
-          String(value).toLowerCase().includes(this.searchTerm.toLowerCase())
-        );
-      }).sort((a, b) => {
-        // Cambia 'field1' por la columna que deseas ordenar inicialmente
-        return String(a['field1']).localeCompare(String(b['field1']));
-      });
-    }
+    paginatedData() {
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
+      return this.data.slice(startIndex, endIndex);
+    },
+    totalPages() {
+      return Math.ceil(this.data.length / this.itemsPerPage);
+    },
   },
   methods: {
     setSpecificData(source){
-      this.specificData = source.Message
-
+      this.specificData = "Subject: "+ source.Subject + "\n" +
+                          "From: "+ source.From + "\n" +         
+                          "To: "+ source.To + "\n" +
+                          "Date: "+ source.Date + "\n" +
+                          "File-type: "+ source.File + "\n\n" +
+                          source.Message
     },
     async search() {
       console.log("search...")
-      console.log(this.searchTerm)
+      this.boolData = false
       this.data = ""
+      this.specificData = ""
       const inputData = {
         "search_type": "match",
         "query": {
           "term": this.searchTerm,
-          "field": "_all"
+          "field": this.selectedOption
         },
         "sort_fields": ["-@timestamp"],
         "from": 0,
-        "max_results": 20,
+        "max_results": Number(this.sliderValue),
         "_source": []
       };
   
@@ -52,7 +58,7 @@ new Vue({
         });
         const data = await response.json();
         console.log(data)
-        // Recibe la información y lo almacena en "data" si tiene contenido, sino, se envia un mensaje de error        this.data = data.hits.hits
+        // Recibe la información y lo almacena en "data" si tiene contenido, si no, se envia un mensaje de error        this.data = data.hits.hits
         if (data.hits.hits.length > 0) {
           this.data = data.hits.hits
           this.error = ""
@@ -64,9 +70,35 @@ new Vue({
         this.error = error
         console.error(error);
       }
+    },sortByColumn(column) {
+      this.data = this.data.sort((a, b) => {
+        const valueA = a._source[column];
+        const valueB = b._source[column];
+    
+        // Verificar si la columna es una fecha
+        if (column === "Date") {
+          const dateA = new Date(valueA);
+          const dateB = new Date(valueB);
+          return dateA - dateB;
+        } else {
+          // Comparar los valores como texto
+          return valueA.localeCompare(valueB);
+        }
+      });
     },
     formatDate(date) {
-      return moment(date, "ddd, DD MMM YYYY HH:mm:ss Z (ZZ)").format("DD/MM/YY");
-    }
+      return moment(date, "ddd, DD MMM YYYY HH:mm:ss Z (ZZ)").format("DD/MM/YYYY");
+    },
+    changePage(value) {
+      if(value === "+"){
+        if(this.currentPage < this.totalPages){
+          this.currentPage = this.currentPage + 1;
+        }
+      }else{
+        if(this.currentPage > 1){
+        this.currentPage = this.currentPage - 1;
+        }
+      }
+    },
   }
 });
