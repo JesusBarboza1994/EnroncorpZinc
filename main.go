@@ -21,7 +21,7 @@ func main() {
 
 	// Agregar CORS disponibles para el cliente
 	corsOptions := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5500", "http://127.0.0.1:5500"},
+		AllowedOrigins: []string{"http://localhost:5500", "http://127.0.0.1:5500", "http://127.0.0.1:5501"},
 		AllowedMethods: []string{ "POST"},
 	})
 

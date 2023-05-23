@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Search Interface</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+</head>
+<body>
+  <div id="app" class="container mx-auto">
+    <h1 class="text-2xl font-bold">API Search Interface</h1>
+
+    <input type="text" v-model="searchTerm" placeholder="Search query" class="border border-gray-300 rounded px-4 py-2 mt-4">
+    <button @click="search" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">Search</button>
+
+    <table class="mt-4">
+      <thead v-if="data.length > 0">
+        <tr >
+          <th v-for="column in columns" :key="column" class="px-4 py-2">{{ column }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="hit in data" :key="hit._id" @click="setSpecificData(hit._source)">
+          <td >{{ formatDate(hit._source.Date) }}</td>
+          <td>{{ hit._source.From }}</td>
+          <td>{{ hit._source.To }}</td>
+          <td>{{ hit._source.Subject }}</td>
+          <td>{{ hit._source.User }}</td>
+          <td>{{ hit._source.File }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="white-space: break-spaces;">{{ specificData}}</div>
+
+    <div v-if="error">{{ error }}</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

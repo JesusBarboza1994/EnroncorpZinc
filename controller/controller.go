@@ -21,10 +21,7 @@ func Search(w http.ResponseWriter, r *http.Request){
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(input)
-	fmt.Println(input.Query	)
-	fmt.Println(input.Query.Term)
-	fmt.Println(input.Query.Field)
+
 	// Se construye el json a enviar a zincsearch
 	data := map[string]interface{}{
 		"search_type": "match",
