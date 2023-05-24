@@ -30,11 +30,15 @@ func main() {
 
 	r.Post("/search", controller.Search)
 
+
 	if !config.IndexExist() {
 		fmt.Println("Index created")
 		config.UpZinc()
-		config.LoopUsers()
+		config.LoopUsers("../enron_mail_20110402/maildir")
 	}
+
+	// Ruta para el profiling
+
 	fmt.Println("Listening on port 8000")
 	log.Fatal(http.ListenAndServe(":8000", handler))
 
