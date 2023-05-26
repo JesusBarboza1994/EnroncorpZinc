@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"fmt"
+	"sync"
 	"net/http"
 	"github.com/JesusBarboza1994/EnroncorpZinc/config"
 	"github.com/JesusBarboza1994/EnroncorpZinc/controller"
@@ -32,10 +33,18 @@ func main() {
 
 
 	if !config.IndexExist() {
-		fmt.Println("Index created")
-		config.UpZinc()
-		config.LoopUsers("../enron_mail_20110402/maildir")
+		// Ya no se crea el index, ya que el _bulk lo crea por si solo
+		// config.UpZinc()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			config.LoopUsers("../enron_mail_20110402/maildir")
+		}()
+		wg.Wait()
+		config.UploadTotalInfo()
 	}
+
 
 	// Ruta para el profiling
 

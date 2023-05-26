@@ -1,17 +1,72 @@
 package config
 
 import (
-	"fmt"
-	"encoding/json"
-	"log"
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"bufio"
 	"net/http"
 	"io/ioutil"
 	"strings"
+
 	"github.com/JesusBarboza1994/EnroncorpZinc/model"
 )
-func ExtractInfoItem(filePath, folderName, userFolderName string){
 
+func UploadTotalInfo() {
+	url := "http://localhost:4080/api/_bulk"
+	username := "admin"
+	password := "Complexpass#123"
+	filePath := "data.ndjson"
+
+	// Lee el contenido del archivo
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal("Error al abrir el archivo:", err)
+		return
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	var jsonData bytes.Buffer
+
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+		jsonData.Write(line)
+	}
+
+	req, err := http.NewRequest("POST", url, &jsonData)
+	if err != nil {
+		log.Fatal("Error al crear la solicitud HTTP:", err)
+		return
+	}
+
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("Error al enviar la solicitud HTTP:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Leer la respuesta
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal("Error al leer la respuesta HTTP:", err)
+		return
+	}
+
+	// Mostrar la respuesta en el registro
+	log.Println(string(respBody))
+}
+func ExtractInfoItem(filePath, folderName, userFolderName string){
 	// Lee el archivo
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -107,26 +162,60 @@ func getStringValue(value interface{}) string {
 
 	return ""
 }
-func SendItem(email model.Email){
-		// Convierte el objeto Email a JSON
-		jsonData, err := json.MarshalIndent(email, "", "  ")
+
+var file *os.File
+func SendItem(email model.Email) {
+	// Convierte el objeto Email a JSON en una sola línea
+	jsonData, err := json.Marshal(email)
+	if err != nil {
+		fmt.Println("Error al serializar JSON:", err)
+		return
+	}
+
+	// Reemplaza los dos puntos ":" con ": " en el JSON
+	jsonData = bytes.ReplaceAll(jsonData, []byte(`:`), []byte(`: `))
+	// Reemplaza los dos puntos "," con ", " en el JSON
+	jsonData = bytes.ReplaceAll(jsonData, []byte(`,`), []byte(`, `))
+	jsonData = append(jsonData, '\n')
+
+	// Abre el archivo en modo append
+
+	file, err := os.OpenFile("data.ndjson", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal("Error al abrir el archivo:", err)
+		return
+	}
+	defer file.Close()
+
+	// Verifica si el jsonData no es nulo o vacío antes de escribir la línea del índice
+	if len(jsonData) > 0 {
+		// Escribe la línea del índice en el archivo NDJSON
+		indexLine := `{ "index" : { "_index" : "enron_zinc_v03" } }` + "\n"
+		entry := indexLine + string(jsonData)
+		// Escribe el objeto JSON en el archivo NDJSON
+		_, err = file.WriteString(entry)
 		if err != nil {
-			fmt.Println("Error al serializar JSON:", err)
+			log.Fatal("Error al escribir en el archivo:", err)
 			return
 		}
-	
+	}
+
+}
+
+
+
+
 		// fmt.Printf("%s\n", jsonData)
 		
 	
-		req, err := http.NewRequest("POST","http://localhost:4080/api/enron_zinc_v03/_doc", bytes.NewBuffer(jsonData))
-			if err != nil {
-					log.Fatal(err)
-			}
-		req.SetBasicAuth("admin", "Complexpass#123")
-		req.Header.Set("Content-Type", "application/json")
-		resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-					log.Fatal(err)
-			}
-		defer resp.Body.Close()
-}
+		// req, err := http.NewRequest("POST","http://localhost:4080/api/enron_zinc_v03/_doc", bytes.NewBuffer(jsonData))
+		// 	if err != nil {
+		// 			log.Fatal(err)
+		// 	}
+		// req.SetBasicAuth("admin", "Complexpass#123")
+		// req.Header.Set("Content-Type", "application/json")
+		// resp, err := http.DefaultClient.Do(req)
+		// 	if err != nil {
+		// 			log.Fatal(err)
+		// 	}
+		// defer resp.Body.Close()
