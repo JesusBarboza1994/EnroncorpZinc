@@ -8,7 +8,6 @@ import (
 	"github.com/JesusBarboza1994/EnroncorpZinc/config"
 	"github.com/JesusBarboza1994/EnroncorpZinc/controller"
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
 )
 
@@ -16,9 +15,6 @@ import (
 
 func main() {
 	r := chi.NewRouter()
-
-	// Agrega el middleware de recuperación de errores
-	r.Use(middleware.Recoverer)
 
 	// Agregar CORS disponibles para el cliente
 	corsOptions := cors.New(cors.Options{
