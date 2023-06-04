@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
+	// "sync"
 )
 
 func LoopUsers(folderPath string){
 
-	wg := &sync.WaitGroup{}
+	// wg := &sync.WaitGroup{}
 
 	// Obtiene la lista de carpetas de usuarios
 	usersFolders, err := os.ReadDir(folderPath)
@@ -21,15 +21,15 @@ func LoopUsers(folderPath string){
 	// Recorre las carpetas
 	for _, usersFolder := range usersFolders {
 		// if i < 1 {
-			wg.Add(1)
+			// wg.Add(1)
 			userFolderName := usersFolder.Name()
-			go func(folderPath, userFolderName string) {
-				defer wg.Done()
-				LoopFoldersOfAUser(folderPath, userFolderName)
-			}(filepath.Join(folderPath, userFolderName), userFolderName)
+			// go func(folderPath, userFolderName string) {
+				// defer wg.Done()
+				LoopFoldersOfAUser(filepath.Join(folderPath, userFolderName), userFolderName)
+			// }
 		// }
 	}
-	wg.Wait()
+	// wg.Wait()
 }
 
 func LoopFoldersOfAUser(folderPath, userFolderName string) {
@@ -56,7 +56,8 @@ func LoopFoldersOfAUser(folderPath, userFolderName string) {
 }
 
 func LoopFiles(folderPath, folderName, userFolderName string){
-	// wg := &sync.WaitGroup{}
+	// var wg sync.WaitGroup
+	// var m sync.Mutex
 	// Lee el contenido de la carpeta
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
@@ -71,13 +72,12 @@ func LoopFiles(folderPath, folderName, userFolderName string){
 		
 		// Ruta completa del archivo
 		filePath := filepath.Join(folderPath, fileName)
-		// wg.Add(1)
 		// Ejecuta la función ExtractInfoItem como goroutine
-		// go func(filePath, folderName, userFolderName string) {
+		// wg.Add(1)
+		// go func(){
 			// defer wg.Done()
-			// Extraer información del archivo
-			ExtractInfoItem(filePath, folderName, userFolderName)
-		// }(filePath, folderName, userFolderName)
+			ExtractInfoItem(filePath, folderName, userFolderName)	
+		// }()
 	}
 	// wg.Wait()
 }
