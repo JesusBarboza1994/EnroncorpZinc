@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
+
 	// "path"
 	"path/filepath"
 	"strings"
@@ -71,7 +73,7 @@ func UploadTotalInfo() {
 	// Mostrar la respuesta en el registro
 	log.Println(string(respBody))
 }
-func ExtractInfoItem(filePath, folderName, userFolderName string){
+func ExtractInfoItem(filePath, folderName, userFolderName string, m *sync.Mutex, wg *sync.WaitGroup) {
 	
 	dataFile, err := os.Stat(filePath)
 	if err != nil {
@@ -92,15 +94,11 @@ func ExtractInfoItem(filePath, folderName, userFolderName string){
 			filePath := filepath.Join(filePath, fileName)
 
 			// Ejecuta recursivamente la función
-			ExtractInfoItem(filePath, folderName, userFolderName)	
+			ExtractInfoItem(filePath, folderName, userFolderName, m, wg)	
 
 		}
 	}else{
-		// if j == 152{
-		// 	fmt.Println("%v %v", folderName, userFolderName)
-		// }
 		// Lee el archivo
-
 		if !isHeavyFile(filePath){
 
 			fileData, err := ioutil.ReadFile(filePath)
@@ -116,47 +114,47 @@ func ExtractInfoItem(filePath, folderName, userFolderName string){
 			lines := strings.Split(fileContent, "\n")
 		
 			// Crea un mapa para almacenar los campos del archivo
-			emailMap := make(map[string]interface{})
+			emailMap := make(map[string]string)
 		
 			// Itera sobre las líneas del archivo y asigna los campos al mapa
 			// Revisa que los campos no esten completos para no sobreescribir los valores
 			for _, line := range lines {
-				if strings.HasPrefix(line, "Message-ID:") && emailMap["Message-ID"] == nil {
+				if strings.HasPrefix(line, "Message-ID:") && emailMap["Message-ID"] == "" {
 					emailMap["Message-ID"] = strings.TrimSpace(strings.TrimPrefix(line, "Message-ID:"))
-				} else if strings.HasPrefix(line, "Date:") && emailMap["Date"] == nil {
+				} else if strings.HasPrefix(line, "Date:") && emailMap["Date"] == "" {
 					emailMap["Date"] = strings.TrimSpace(strings.TrimPrefix(line, "Date:"))
-				} else if strings.HasPrefix(line, "From:") && emailMap["From"] == nil {
+				} else if strings.HasPrefix(line, "From:") && emailMap["From"] == "" {
 					emailMap["From"] = strings.TrimSpace(strings.TrimPrefix(line, "From:"))
-				} else if strings.HasPrefix(line, "To:") && emailMap["To"] == nil {
+				} else if strings.HasPrefix(line, "To:") && emailMap["To"] == "" {
 					emailMap["To"] = strings.TrimSpace(strings.TrimPrefix(line, "To:"))
-				} else if strings.HasPrefix(line, "Subject:") && emailMap["Subject"] == nil {
+				} else if strings.HasPrefix(line, "Subject:") && emailMap["Subject"] == "" {
 					emailMap["Subject"] = strings.TrimSpace(strings.TrimPrefix(line, "Subject:"))
-				} else if strings.HasPrefix(line, "Mime-Version:") && emailMap["Mime-Version"] == nil {
+				} else if strings.HasPrefix(line, "Mime-Version:") && emailMap["Mime-Version"] == "" {
 					emailMap["Mime-Version"] = strings.TrimSpace(strings.TrimPrefix(line, "Mime-Version:"))
-				} else if strings.HasPrefix(line, "Content-Type:") && emailMap["Content-Type"] == nil {
+				} else if strings.HasPrefix(line, "Content-Type:") && emailMap["Content-Type"] == "" {
 					emailMap["Content-Type"] = strings.TrimSpace(strings.TrimPrefix(line, "Content-Type:"))
-				} else if strings.HasPrefix(line, "Content-Transfer-Encoding:") && emailMap["Content-Transfer-Encoding"] == nil {
+				} else if strings.HasPrefix(line, "Content-Transfer-Encoding:") && emailMap["Content-Transfer-Encoding"] == "" {
 					emailMap["Content-Transfer-Encoding"] = strings.TrimSpace(strings.TrimPrefix(line, "Content-Transfer-Encoding:"))
-				} else if strings.HasPrefix(line, "X-From:") && emailMap["X-From"] == nil {
+				} else if strings.HasPrefix(line, "X-From:") && emailMap["X-From"] == "" {
 					emailMap["X-From"] = strings.TrimSpace(strings.TrimPrefix(line, "X-From:"))
-				} else if strings.HasPrefix(line, "X-To:") && emailMap["X-To"] == nil {
+				} else if strings.HasPrefix(line, "X-To:") && emailMap["X-To"] == "" {
 					emailMap["X-To"] = strings.TrimSpace(strings.TrimPrefix(line, "X-To:"))
-				} else if strings.HasPrefix(line, "X-cc:") && emailMap["X-cc"] == nil {
+				} else if strings.HasPrefix(line, "X-cc:") && emailMap["X-cc"] == "" {
 					emailMap["X-cc"] = strings.TrimSpace(strings.TrimPrefix(line, "X-cc:"))
-				} else if strings.HasPrefix(line, "X-bcc:") && emailMap["X-bcc"] == nil {
+				} else if strings.HasPrefix(line, "X-bcc:") && emailMap["X-bcc"] == "" {
 					emailMap["X-bcc"] = strings.TrimSpace(strings.TrimPrefix(line, "X-bcc:"))
-				} else if strings.HasPrefix(line, "X-Folder:") && emailMap["X-Folder"] == nil {
+				} else if strings.HasPrefix(line, "X-Folder:") && emailMap["X-Folder"] == "" {
 					emailMap["X-Folder"] = strings.TrimSpace(strings.TrimPrefix(line, "X-Folder:"))
-				} else if strings.HasPrefix(line, "X-Origin:") && emailMap["X-Origin"] == nil {
+				} else if strings.HasPrefix(line, "X-Origin:") && emailMap["X-Origin"] == "" {
 					emailMap["X-Origin"] = strings.TrimSpace(strings.TrimPrefix(line, "X-Origin:"))
-				} else if strings.HasPrefix(line, "X-FileName:") && emailMap["X-FileName"] == nil {
+				} else if strings.HasPrefix(line, "X-FileName:") && emailMap["X-FileName"] == "" {
 					emailMap["X-FileName"] = strings.TrimSpace(strings.TrimPrefix(line, "X-FileName:"))
 				} else {
 					// Agrega el contenido sin nombre al campo Message
 					if _, ok := emailMap["Message"]; !ok {
 						emailMap["Message"] = line
 					} else {
-						emailMap["Message"] = emailMap["Message"].(string) + "\n" + line
+						emailMap["Message"] = emailMap["Message"] + "\n" + line
 					}
 				}
 			}
@@ -165,42 +163,36 @@ func ExtractInfoItem(filePath, folderName, userFolderName string){
 			email := model.Email{
 				File:                    folderName,
 				User:                    userFolderName,
-				MessageID:               getStringValue(emailMap["Message-ID"]),
-				Date:                    getStringValue(emailMap["Date"]),
-				From:                    getStringValue(emailMap["From"]),
-				To:                      getStringValue(emailMap["To"]),
-				Subject:                 getStringValue(emailMap["Subject"]),
-				MimeVersion:             getStringValue(emailMap["Mime-Version"]),
-				ContentType:             getStringValue(emailMap["Content-Type"]),
-				ContentTransferEncoding: getStringValue(emailMap["Content-Transfer-Encoding"]),
-				XFrom:                   getStringValue(emailMap["X-From"]),
-				XTo:                     getStringValue(emailMap["X-To"]),
-				Xcc:                     getStringValue(emailMap["X-cc"]),
-				Xbcc:                    getStringValue(emailMap["X-bcc"]),
-				XFolder:                 getStringValue(emailMap["X-Folder"]),
-				XOrigin:                 getStringValue(emailMap["X-Origin"]),
-				XFileName:               getStringValue(emailMap["X-FileName"]),
-				Message:                 getStringValue(emailMap["Message"]),
+				MessageID:               emailMap["Message-ID"],
+				Date:                    emailMap["Date"],
+				From:                    emailMap["From"],
+				To:                      emailMap["To"],
+				Subject:                 emailMap["Subject"],
+				MimeVersion:             emailMap["Mime-Version"],
+				ContentType:             emailMap["Content-Type"],
+				ContentTransferEncoding: emailMap["Content-Transfer-Encoding"],
+				XFrom:                   emailMap["X-From"],
+				XTo:                     emailMap["X-To"],
+				Xcc:                     emailMap["X-cc"],
+				Xbcc:                    emailMap["X-bcc"],
+				XFolder:                 emailMap["X-Folder"],
+				XOrigin:                 emailMap["X-Origin"],
+				XFileName:               emailMap["X-FileName"],
+				Message:                 emailMap["Message"],
 			}
 		
 			// sendItem(email)
-			// m.Lock()
+			m.Lock()
 			sendEmailsByBatch(email)
-			// m.Unlock()
+			m.Unlock()
 		}
 	}
-
 }
 
-// var batch = ""
 var client = &http.Client{}
-var batch bytes.Buffer
-func sendEmailsByBatch(email model.Email) {
-	url := "http://localhost:4080/api/enron_zinc_v03/_multi"
-	username := "admin"
-	password := "Complexpass#123"
 
-	encoder := json.NewEncoder(&batch)
+func sendEmailsByBatch(email model.Email) {
+	encoder := json.NewEncoder(&model.Batch)
 	err := encoder.Encode(email)
 	if err != nil {
 		fmt.Println("Error al serializar JSON:", err)
@@ -209,42 +201,42 @@ func sendEmailsByBatch(email model.Email) {
 
 	if i == 20000 {
 		fmt.Printf("batch: %v \n", j)
-
-		// Crear una solicitud POST
-		req, err := http.NewRequest("POST", url, bytes.NewReader(batch.Bytes()))
-		if err != nil {
-			fmt.Println("Error al crear la solicitud:", err)
-			return
-		}
-
-		// Establecer el tipo de contenido del encabezado de la solicitud
-		req.Header.Set("Content-Type", "application/json")
-		req.SetBasicAuth(username, password)
-
-		// Crear un cliente HTTP y enviar la solicitud
-		
-		resp, err := client.Do(req)
-		if err != nil {
-			fmt.Println("Error al enviar la solicitud:", err)
-			return
-		}
-
-		// Verificar el código de respuesta
-		if resp.StatusCode == http.StatusOK {
-			fmt.Println("Solicitud enviada correctamente.")
-		} else {
-			fmt.Println("Error al enviar la solicitud. Código de respuesta:", resp.StatusCode)
-			return
-		}
-
+		SendBatch()
 		i = 0
-		batch.Reset()
+		model.Batch.Reset()
 		j = j + 1
 	}
 
 	i = i + 1
 }
 
+func SendBatch(){
+	// Crear una solicitud POST
+	req, err := http.NewRequest("POST", model.UploadUrl , bytes.NewReader(model.Batch.Bytes()))
+	if err != nil {
+		fmt.Println("Error al crear la solicitud:", err)
+		return
+	}
+
+	// Establecer el tipo de contenido del encabezado de la solicitud
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(model.Username, model.Password)
+
+	// Crear un cliente HTTP y enviar la solicitud
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error al enviar la solicitud:", err)
+		return
+	}
+
+	// Verificar el código de respuesta
+	if resp.StatusCode == http.StatusOK {
+		fmt.Println("Solicitud enviada correctamente.")
+	} else {
+		fmt.Println("Error al enviar la solicitud. Código de respuesta:", resp.StatusCode)
+		return
+	}
+}
 func isHeavyFile(filePath string) bool{
 	// Obtener información del archivo
 	fileInfo, err := os.Stat(filePath)
@@ -259,58 +251,46 @@ func isHeavyFile(filePath string) bool{
 		return true
 	}
 	return false
-	
 }
 
-func getStringValue(value interface{}) string {
-	if value == nil {
-		return "-"
-	}
-
-	if str, ok := value.(string); ok {
-		return str
-	}
-
-	return ""
-}
 
 // var file *os.File
-func sendItem(email model.Email) {
-	// Convierte el objeto Email a JSON en una sola línea
-	jsonData, err := json.Marshal(email)
-	if err != nil {
-		fmt.Println("Error al serializar JSON:", err)
-		return
-	}
+// func sendItem(email model.Email) {
+// 	// Convierte el objeto Email a JSON en una sola línea
+// 	jsonData, err := json.Marshal(email)
+// 	if err != nil {
+// 		fmt.Println("Error al serializar JSON:", err)
+// 		return
+// 	}
 
-	// Reemplaza los dos puntos ":" con ": " en el JSON
-	jsonData = bytes.ReplaceAll(jsonData, []byte(`:`), []byte(`: `))
-	// Reemplaza los dos puntos "," con ", " en el JSON
-	jsonData = bytes.ReplaceAll(jsonData, []byte(`,`), []byte(`, `))
-	jsonData = append(jsonData, '\n')
+// 	// Reemplaza los dos puntos ":" con ": " en el JSON
+// 	jsonData = bytes.ReplaceAll(jsonData, []byte(`:`), []byte(`: `))
+// 	// Reemplaza los dos puntos "," con ", " en el JSON
+// 	jsonData = bytes.ReplaceAll(jsonData, []byte(`,`), []byte(`, `))
+// 	jsonData = append(jsonData, '\n')
 
-	// Abre el archivo en modo append
+// 	// Abre el archivo en modo append
 
-	file, err := os.OpenFile("data.ndjson", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		log.Fatal("Error al abrir el archivo:", err)
-		return
-	}
-	defer file.Close()
+// 	file, err := os.OpenFile("data.ndjson", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+// 	if err != nil {
+// 		log.Fatal("Error al abrir el archivo:", err)
+// 		return
+// 	}
+// 	defer file.Close()
 
-	// Verifica si el jsonData no es nulo o vacío antes de escribir la línea del índice
-	if len(jsonData) > 0 {
-		// Escribe la línea del índice en el archivo NDJSON
-		indexLine := `{ "index" : { "_index" : "enron_zinc_v03" } }` + "\n"
-		entry := indexLine + string(jsonData)
-		// Escribe el objeto JSON en el archivo NDJSON
-		_, err = file.WriteString(entry)
-		if err != nil {
-			log.Fatal("Error al escribir en el archivo:", err)
-			return
-		}
-	}
-}
+// 	// Verifica si el jsonData no es nulo o vacío antes de escribir la línea del índice
+// 	if len(jsonData) > 0 {
+// 		// Escribe la línea del índice en el archivo NDJSON
+// 		indexLine := `{ "index" : { "_index" : "enron_zinc_v03" } }` + "\n"
+// 		entry := indexLine + string(jsonData)
+// 		// Escribe el objeto JSON en el archivo NDJSON
+// 		_, err = file.WriteString(entry)
+// 		if err != nil {
+// 			log.Fatal("Error al escribir en el archivo:", err)
+// 			return
+// 		}
+// 	}
+// }
 
 
 

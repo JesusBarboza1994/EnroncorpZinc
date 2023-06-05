@@ -11,7 +11,6 @@ import(
 
 // Creación del indice base en ZincSearch
 func UpZinc(){
-	// Creación del indice
 	data := map[string]interface{}{
 		"name":         "enron_zinc_v03",
 		"storage_type": "disk",
@@ -164,7 +163,6 @@ func UpZinc(){
 }
 
 func IndexExist() bool {
-
 	// Crear solicitud HEAD
 	req, err := http.NewRequest("HEAD", model.IndexUrl, nil)
 	if err != nil {
@@ -174,7 +172,6 @@ func IndexExist() bool {
 
 	// Establecer las cabeceras de la solicitud
 	req.Header.Set("Content-Type", "application/json")
-
 	// Agregar las credenciales de autenticación Basic
 	req.SetBasicAuth("admin", "Complexpass#123")
 
