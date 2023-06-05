@@ -9,7 +9,7 @@ import (
 
 func LoopUsers(folderPath string){
 
-	wg := &sync.WaitGroup{}
+	// wg := &sync.WaitGroup{}
 
 	// Obtiene la lista de carpetas de usuarios
 	usersFolders, err := os.ReadDir(folderPath)
@@ -20,19 +20,18 @@ func LoopUsers(folderPath string){
 
 	// Recorre las carpetas
 	for _, usersFolder := range usersFolders {
-			wg.Add(1)
-			fmt.Println(usersFolder.Name())
+			// wg.Add(1)
 			userFolderName := usersFolder.Name()
-			go func(folderPath, userFolderName string) {
-				defer wg.Done()
-				LoopFoldersOfAUser(folderPath, userFolderName)
-			}(filepath.Join(folderPath, userFolderName), userFolderName)
+			// go func(folderPath, userFolderName string) {
+				// defer wg.Done()
+				LoopFoldersOfAUser(filepath.Join(folderPath, userFolderName), userFolderName)
+			// }
 	}
-	wg.Wait()
+	// wg.Wait()
 }
 
 func LoopFoldersOfAUser(folderPath, userFolderName string) {
-	wg := &sync.WaitGroup{}
+	// wg := &sync.WaitGroup{}
 	// Obtiene la lista de carpetas
 	folders, err := os.ReadDir(folderPath)
 	if err != nil {
@@ -42,20 +41,19 @@ func LoopFoldersOfAUser(folderPath, userFolderName string) {
 
 	// Recorre las carpetas
 	for _, folder := range folders {
-		
-		fmt.Println(folder.Name())
-		folderName := folder.Name()
-		wg.Add(1)
-			go func(folderPath, folderName, userFolderName string) {
-				defer wg.Done()
-				LoopFiles(filepath.Join(folderPath, folderName), folderName, userFolderName)
-			}(folderPath, folderName, userFolderName)
+			folderName := folder.Name()
+			// wg.Add(1)
+				// go func(folderPath, folderName, userFolderName string) {
+				// 	defer wg.Done()
+					LoopFiles(filepath.Join(folderPath, folderName), folderName, userFolderName)
+				// }(filepath.Join(folderPath, folderName), folderName, userFolderName)
 	}
-	wg.Wait()
+	// wg.Wait()
 }
 
 func LoopFiles(folderPath, folderName, userFolderName string){
-	// wg := &sync.WaitGroup{}
+	var wg sync.WaitGroup
+	var m sync.Mutex
 	// Lee el contenido de la carpeta
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
@@ -67,15 +65,16 @@ func LoopFiles(folderPath, folderName, userFolderName string){
 	for _, file := range files {
 		// Obtiene el nombre del archivo
 		fileName := file.Name()
-		fmt.Printf("el nombre es %v \n", fileName)
+		
 		// Ruta completa del archivo
 		filePath := filepath.Join(folderPath, fileName)
-		// wg.Add(1)
 		// Ejecuta la función ExtractInfoItem como goroutine
-		// go func(filePath, folderName, userFolderName string) {
-		// 	defer wg.Done()
-			// Extraer información del archivo
-			ExtractInfoItem(filePath, folderName, userFolderName)
-		// }(filePath, folderName, userFolderName)
+		wg.Add(1)
+		go func(){
+			defer wg.Done()
+			ExtractInfoItem(filePath, folderName, userFolderName, &m, &wg)	
+		}()
 	}
+	wg.Wait()
+	
 }
